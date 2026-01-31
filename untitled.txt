@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>منظومة النعيمي الحسابية</title>
+    
+    <meta name="theme-color" content="#1a5f7a">
+    <link rel="manifest" href="data:application/manifest+json,{%22name%22:%22%D8%AD%D8%B3%D8%A7%D9%81%D8%A7%D8%AA%20%D8%A7%D9%84%D9%86%D8%B9%D9%8A%D9%85%D9%8A%22,%22short_name%22:%22%D8%A7%D9%84%D9%86%D8%B9%D9%8A%D9%85%D9%8A%22,%22start_url%22:%22.%22,%22display%22:%22standalone%22,%22background_color%22:%22#ffffff%22}">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --primary: #1a5f7a; --accent: #d4af37; --stamp: #c0392b; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f0f2f5; margin: 0; padding: 0; }
+        .container { max-width: 1100px; margin: auto; padding: 15px; }
+
+        /* اللوكو */
+        .logo-header { text-align: center; padding: 25px; background: linear-gradient(135deg, #1a5f7a 0%, #0d2f3d 100%); color: white; border-radius: 0 0 40px 40px; border-bottom: 4px solid var(--accent); }
+        .logo-frame { border: 2px double var(--accent); padding: 5px 25px; border-radius: 12px; display: inline-block; }
+        .logo-text { font-size: 2.2rem; margin: 0; color: var(--accent); }
+
+        .card { background: white; border-radius: 15px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .grid-inputs { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+        
+        input, select, textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 1rem; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; }
+
+        /* جداول البيانات */
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th { background: var(--primary); color: white; padding: 12px; font-size: 0.9rem; }
+        td { padding: 10px; border-bottom: 1px solid #eee; text-align: center; }
+        .row-edit:hover { background: #fff9e6; cursor: pointer; }
+
+        /* تقارير نصف شهرية */
+        .reports-box { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
+        .rep-card { background: #eef2f3; padding: 15px; border-radius: 10px; text-align: center; border-right: 4px solid var(--primary); }
+        
+        /* الختم */
+        .stamp-wrap { display: none; text-align: left; margin-top: 20px; }
+        .stamp { width: 110px; height: 110px; border: 3px dashed var(--stamp); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; flex-direction: column; color: var(--stamp); font-weight: bold; transform: rotate(-10deg); }
+
+        .btn { border: none; padding: 14px; border-radius: 10px; cursor: pointer; font-weight: bold; color: white; transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn-save { background: var(--primary); width: 100%; }
+        .btn-excel { background: #27ae60; }
+        .btn-print { background: #8e44ad; }
+        .btn-clear { background: #e67e22; }
+
+        @media print {
+            .no-print { display: none !important; }
+            .card { box-shadow: none; border: 1px solid #eee; }
+            .stamp-wrap { display: block !important; }
+            body { background: white; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="logo-header">
+    <div class="logo-frame">
+        <h1 class="logo-text">حسابات النعيمي</h1>
+        <small>نظام إدارة البيانات والحسابات الموحد</small>
+    </div>
+</div>
+
+<div class="container">
+    <div class="card no-print">
+        <div class="grid-inputs">
+            <div><label>اسم الجهة</label><input type="text" id="clientName" oninput="loadData()" placeholder="مثلاً: شركة النور"></div>
+            <div><label>رقم الحساب</label><input type="text" id="accNum" oninput="saveInfo()"></div>
+            <div><label>الشهر</label><select id="month" onchange="loadData()"><option value="1">يناير</option><option value="2">فبراير</option><option value="3">مارس</option><option value="4">أبريل</option><option value="5">مايو</option><option value="6">يونيو</option><option value="7">يوليو</option><option value="8">أغسطس</option><option value="9">سبتمبر</option><option value="10">أكتوبر</option><option value="11">نوفمبر</option><option value="12">ديسمبر</option></select></div>
+            <div><label>السنة</label><input type="number" id="year" value="2026" onchange="loadData()"></div>
+        </div>
+    </div>
+
+    <div class="card no-print">
+        <div style="max-width: 200px; margin-bottom:15px;">
+            <label>رقم اليوم (للتعديل أو الإضافة)</label>
+            <input type="number" id="day" min="1" max="31" oninput="fetchDayData()">
+        </div>
+        <div class="grid-inputs">
+            <div style="background:#f9f9f9; padding:8px; border-radius:8px;"><b>فطور</b><input type="number" id="bc" placeholder="عدد"><input type="number" id="bp" placeholder="سعر"></div>
+            <div style="background:#f9f9f9; padding:8px; border-radius:8px;"><b>غداء</b><input type="number" id="lc" placeholder="عدد"><input type="number" id="lp" placeholder="سعر"></div>
+            <div style="background:#f9f9f9; padding:8px; border-radius:8px;"><b>عشاء</b><input type="number" id="dc" placeholder="عدد"><input type="number" id="dp" placeholder="سعر"></div>
+        </div>
+        <button class="btn btn-save" style="margin-top:15px;" onclick="saveData()"><i class="fas fa-save"></i> حفظ البيانات (إضافة/تعديل)</button>
+    </div>
+
+    <div class="card" id="printableArea">
+        <h3 style="color:var(--primary); border-bottom: 2px solid #eee; padding-bottom:5px;">كشف الحساب الرسمي</h3>
+        <p>الجهة: <b id="dispClient">-</b> | الحساب: <b id="dispAcc">-</b></p>
+        
+        <table>
+            <thead><tr><th>اليوم</th><th>فطور</th><th>غداء</th><th>عشاء</th><th>المجموع</th></tr></thead>
+            <tbody id="tbody"></tbody>
+        </table>
+
+        <div class="reports-box">
+            <div class="rep-card">
+                <small>النصف الأول (1-15)</small>
+                <div id="h1Total" style="font-weight:bold; color:var(--primary);">0 د.ع</div>
+            </div>
+            <div class="rep-card">
+                <small>النصف الثاني (16-31)</small>
+                <div id="h2Total" style="font-weight:bold; color:var(--primary);">0 د.ع</div>
+            </div>
+            <div class="rep-card" style="grid-column: span 2; background:var(--primary); color:white;">
+                <span>إجمالي الشهر المستحق</span>
+                <div id="grandTotal" style="font-size:1.5rem; font-weight:bold;">0 د.ع</div>
+                <div id="totalWords" style="font-size:0.8rem; opacity:0.8;">فقط صفر دينار</div>
+            </div>
+        </div>
+
+        <div style="margin-top:15px;">
+            <label>ملاحظات إضافية:</label>
+            <textarea id="notes" oninput="saveInfo()" rows="2"></textarea>
+        </div>
+
+        <div class="stamp-wrap">
+            <div class="stamp">
+                <span>الحسابات</span>
+                <b>النعيمي</b>
+                <small>ختم رسمي</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid-inputs no-print" style="margin-bottom:40px;">
+        <button class="btn btn-excel" onclick="exportToExcel()"><i class="fas fa-file-excel"></i> إكسل</button>
+        <button class="btn btn-print" onclick="window.print()"><i class="fas fa-print"></i> طباعة الكشف</button>
+        <button class="btn btn-clear" onclick="clearMonth()"><i class="fas fa-trash"></i> تصفير الشهر</button>
+    </div>
+</div>
+
+<script>
+    let db = JSON.parse(localStorage.getItem('NaimiPWA_DB')) || {};
+
+    function getStorageKey() {
+        const client = document.getElementById('clientName').value.trim() || 'عام';
+        return `${client}_${document.getElementById('month').value}_${document.getElementById('year').value}`;
+    }
+
+    // جلب بيانات يوم معين بمجرد كتابة رقمه (للتعديل)
+    function fetchDayData() {
+        const key = getStorageKey();
+        const day = document.getElementById('day').value;
+        if(db[key] && db[key].days[day]) {
+            const d = db[key].days[day];
+            document.getElementById('bc').value = d.bc; document.getElementById('bp').value = d.bp;
+            document.getElementById('lc').value = d.lc; document.getElementById('lp').value = d.lp;
+            document.getElementById('dc').value = d.dc; document.getElementById('dp').value = d.dp;
+        } else {
+            // مسح الخانات إذا اليوم غير موجود للبدء بجديد
+            ['bc','bp','lc','lp','dc','dp'].forEach(id => document.getElementById(id).value = '');
+        }
+    }
+
+    function loadData() {
+        const key = getStorageKey();
+        const data = db[key] || { info: { acc: '', notes: '' }, days: {} };
+        
+        document.getElementById('accNum').value = data.info.acc || '';
+        document.getElementById('notes').value = data.info.notes || '';
+        document.getElementById('dispClient').innerText = document.getElementById('clientName').value || "غير محدد";
+        document.getElementById('dispAcc').innerText = data.info.acc || "-";
+
+        let tbody = document.getElementById('tbody');
+        tbody.innerHTML = '';
+        let total = 0, h1 = 0, h2 = 0;
+
+        Object.keys(data.days).sort((a,b)=>a-b).forEach(day => {
+            let d = data.days[day];
+            let sum = (d.bc*d.bp) + (d.lc*d.lp) + (d.dc*d.dp);
+            total += sum;
+            if(parseInt(day) <= 15) h1 += sum; else h2 += sum;
+            
+            tbody.innerHTML += `<tr class="row-edit" onclick="setDay(${day})">
+                <td>${day}</td><td>${d.bc}×${d.bp}</td><td>${d.lc}×${d.lp}</td><td>${d.dc}×${d.dp}</td><td>${sum.toLocaleString()}</td>
+            </tr>`;
+        });
+
+        document.getElementById('grandTotal').innerText = total.toLocaleString() + " د.ع";
+        document.getElementById('h1Total').innerText = h1.toLocaleString() + " د.ع";
+        document.getElementById('h2Total').innerText = h2.toLocaleString() + " د.ع";
+        document.getElementById('totalWords').innerText = tafeet(total);
+    }
+
+    function setDay(d) { document.getElementById('day').value = d; fetchDayData(); }
+
+    function saveData() {
+        const key = getStorageKey();
+        const day = document.getElementById('day').value;
+        if(!day) return alert("حدد اليوم أولاً");
+
+        if(!db[key]) db[key] = { info: { acc: '', notes: '' }, days: {} };
+        db[key].days[day] = {
+            bc: Number(document.getElementById('bc').value), bp: Number(document.getElementById('bp').value),
+            lc: Number(document.getElementById('lc').value), lp: Number(document.getElementById('lp').value),
+            dc: Number(document.getElementById('dc').value), dp: Number(document.getElementById('dp').value)
+        };
+        saveToLocalStorage();
+    }
+
+    function saveInfo() {
+        const key = getStorageKey();
+        if(!db[key]) db[key] = { info: { acc: '', notes: '' }, days: {} };
+        db[key].info.acc = document.getElementById('accNum').value;
+        db[key].info.notes = document.getElementById('notes').value;
+        saveToLocalStorage();
+    }
+
+    function saveToLocalStorage() {
+        localStorage.setItem('NaimiPWA_DB', JSON.stringify(db));
+        loadData();
+    }
+
+    function exportToExcel() {
+        const client = document.getElementById('clientName').value || 'حسابات';
+        const html = `<html><head><meta charset="utf-8"></head><body dir="rtl">
+            <h2>${client}</h2>${document.getElementById('printableArea').innerHTML}
+        </body></html>`;
+        const blob = new Blob([html], { type: 'application/vnd.ms-excel' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a"); a.href = url; a.download = `${client}.xls`; a.click();
+    }
+
+    function clearMonth() { if(confirm("مسح بيانات الشهر؟")) { delete db[getStorageKey()]; saveToLocalStorage(); } }
+
+    function tafeet(n) {
+        if (n === 0) return "فقط صفر دينار لا غير";
+        const a = ["", "واحد", "اثنان", "ثلاثة", "أربعة", "خمسة", "ستة", "سبعة", "ثمانية", "تسعة", "عشرة", "أحد عشر", "اثنا عشر", "ثلاثة عشر", "أربعة عشر", "خمسة عشر", "ستة عشر", "سبعة عشر", "ثمانية عشر", "تسعة عشر"];
+        const b = ["", "", "عشرون", "ثلاثون", "أربعون", "خمسون", "ستون", "سبعون", "ثمانون", "تسعون"];
+        const c = ["", "مائة", "مائتان", "ثلاثمائة", "أربعمائة", "خمسمائة", "ستمائة", "سبعمائة", "ثمانمائة", "تسعمائة"];
+        function conv(n) {
+            if (n < 20) return a[n];
+            if (n < 100) return b[Math.floor(n / 10)] + (n % 10 !== 0 ? " و" + a[n % 10] : "");
+            if (n < 1000) return c[Math.floor(n / 100)] + (n % 100 !== 0 ? " و" + conv(n % 100) : "");
+            if (n < 1000000) return conv(Math.floor(n / 1000)) + " ألف " + (n % 1000 !== 0 ? " و" + conv(n % 1000) : "");
+            return conv(Math.floor(n / 1000000)) + " مليون " + (n % 1000000 !== 0 ? " و" + conv(n % 1000000) : "");
+        }
+        return "فقط " + conv(n) + " دينار عراقي لا غير";
+    }
+
+    window.onload = () => { 
+        const d = new Date(); 
+        document.getElementById('month').value = d.getMonth()+1; 
+        loadData(); 
+    };
+</script>
+
+</body>
+</html>
